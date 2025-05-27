@@ -35,6 +35,7 @@
         .btn-green { background-color: #059669; color: white; }
         .btn-red { color: #dc2626; background: none; }
         .btn-red:hover { color: #b91c1c; }
+        .btn-orange { background-color: #ea580c; color: white; }
         .card {
             background-color: white;
             border-radius: 0.5rem;
@@ -42,18 +43,44 @@
             padding: 1rem;
             margin-bottom: 1.5rem;
         }
+        .status-indicator {
+            padding: 0.25rem 0.5rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        .status-saved {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+        .status-unsaved {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
     </style>
 </head>
 <body class="bg-gray-50 p-4">
     <div class="container mx-auto">
-        <h1 class="text-2xl font-bold text-blue-800 mb-6">Sistema de Monitoramento de Frequência Escolar</h1>
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-2xl font-bold text-blue-800">Sistema de Monitoramento de Frequência Escolar</h1>
+            <div class="flex items-center gap-2">
+                <span id="status-indicator" class="status-indicator status-saved">
+                    <i class="fas fa-check-circle mr-1"></i>
+                    Dados salvos
+                </span>
+                <button id="btn-backup" class="btn btn-orange text-sm">
+                    <i class="fas fa-database mr-1"></i>
+                    Backup
+                </button>
+            </div>
+        </div>
         
         <div class="card">
             <h2 class="text-lg font-semibold mb-3 text-gray-700">Visão Geral</h2>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div class="bg-blue-50 p-3 rounded-md">
                     <p class="text-sm text-gray-600">Total de ausências:</p>
-                    <p class="text-2xl font-bold text-blue-700" id="total-ausencias">11</p>
+                    <p class="text-2xl font-bold text-blue-700" id="total-ausencias">0</p>
                 </div>
                 <div class="bg-green-50 p-3 rounded-md">
                     <p class="text-sm text-gray-600">Ausências por turma:</p>
@@ -161,25 +188,111 @@
             </div>
         </div>
 
-        <div class="mt-4 text-sm text-gray-500">
-            Total de registros: <span id="contador-registros">0</span>
+        <div class="mt-4 flex justify-between items-center text-sm text-gray-500">
+            <span>Total de registros: <span id="contador-registros">0</span></span>
+            <span>Última atualização: <span id="ultima-atualizacao">-</span></span>
+        </div>
+    </div>
+
+    <!-- Modal de Backup -->
+    <div id="modal-backup" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 class="text-lg font-semibold mb-4">Gerenciar Dados</h3>
+            <div class="space-y-4">
+                <div>
+                    <button id="btn-exportar-backup" class="w-full btn btn-green mb-2">
+                        <i class="fas fa-download mr-2"></i>
+                        Exportar Backup (JSON)
+                    </button>
+                    <p class="text-sm text-gray-600">Salva todos os dados em um arquivo JSON para backup.</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Importar Backup:</label>
+                    <input type="file" id="input-importar" accept=".json" class="w-full p-2 border rounded">
+                    <button id="btn-importar-backup" class="w-full btn btn-blue mt-2">
+                        <i class="fas fa-upload mr-2"></i>
+                        Importar Dados
+                    </button>
+                    <p class="text-sm text-gray-600 mt-1">Restaura dados de um arquivo de backup.</p>
+                </div>
+                <div class="border-t pt-4">
+                    <button id="btn-limpar-dados" class="w-full btn btn-red">
+                        <i class="fas fa-trash mr-2"></i>
+                        Limpar Todos os Dados
+                    </button>
+                    <p class="text-sm text-gray-600 mt-1">Remove permanentemente todos os registros.</p>
+                </div>
+            </div>
+            <div class="flex justify-end mt-6">
+                <button id="fechar-modal-backup" class="btn btn-red">Fechar</button>
+            </div>
         </div>
     </div>
 
     <script>
-        let registros = [
-            { id: 1, data: '19/05/2025', turma: '6º ANO', aluno: 'Caio', contato: '', responsavelLigacao: '', justificativa: '' },
-            { id: 2, data: '19/05/2025', turma: '6º ANO', aluno: 'Mairo', contato: '', responsavelLigacao: '', justificativa: '' },
-            { id: 3, data: '19/05/2025', turma: '6º ANO', aluno: 'Maria Luiza', contato: '', responsavelLigacao: '', justificativa: '' },
-            { id: 4, data: '19/05/2025', turma: '6º ANO', aluno: 'Rafael', contato: '', responsavelLigacao: '', justificativa: '' },
-            { id: 5, data: '19/05/2025', turma: '7º ANO', aluno: 'Ariele', contato: '', responsavelLigacao: '', justificativa: '' },
-            { id: 6, data: '19/05/2025', turma: '7º ANO', aluno: 'Kauê', contato: '', responsavelLigacao: '', justificativa: '' },
-            { id: 7, data: '19/05/2025', turma: '7º ANO', aluno: 'Luana', contato: '', responsavelLigacao: '', justificativa: '' },
-            { id: 8, data: '19/05/2025', turma: '7º ANO', aluno: 'Maycon', contato: '', responsavelLigacao: '', justificativa: '' },
-            { id: 9, data: '19/05/2025', turma: '7º ANO', aluno: 'Suelen', contato: '', responsavelLigacao: '', justificativa: '' },
-            { id: 10, data: '19/05/2025', turma: '7º ANO', aluno: 'Kamilly', contato: '', responsavelLigacao: '', justificativa: '' },
-            { id: 11, data: '20/05/2025', turma: '8º ANO', aluno: 'Katlyn', contato: 'Rosane (mãe)', responsavelLigacao: 'Elaine', justificativa: 'Mãe avisou a diretora que aluna ficaria 1 semana ausente do colégio' },
-        ];
+        // Sistema de armazenamento local
+        const STORAGE_KEY = 'frequencia_escolar_registros';
+        let registros = [];
+
+        // Função para carregar dados do localStorage
+        function carregarDados() {
+            try {
+                const dados = localStorage.getItem(STORAGE_KEY);
+                if (dados) {
+                    registros = JSON.parse(dados);
+                } else {
+                    // Dados iniciais de exemplo (apenas na primeira vez)
+                    registros = [
+                        { id: 1, data: '19/05/2025', turma: '6º ANO', aluno: 'Caio', contato: '', responsavelLigacao: '', justificativa: '' },
+                        { id: 2, data: '19/05/2025', turma: '6º ANO', aluno: 'Mairo', contato: '', responsavelLigacao: '', justificativa: '' },
+                        { id: 3, data: '19/05/2025', turma: '6º ANO', aluno: 'Maria Luiza', contato: '', responsavelLigacao: '', justificativa: '' },
+                        { id: 4, data: '19/05/2025', turma: '6º ANO', aluno: 'Rafael', contato: '', responsavelLigacao: '', justificativa: '' },
+                        { id: 5, data: '19/05/2025', turma: '7º ANO', aluno: 'Ariele', contato: '', responsavelLigacao: '', justificativa: '' },
+                        { id: 6, data: '19/05/2025', turma: '7º ANO', aluno: 'Kauê', contato: '', responsavelLigacao: '', justificativa: '' },
+                        { id: 7, data: '19/05/2025', turma: '7º ANO', aluno: 'Luana', contato: '', responsavelLigacao: '', justificativa: '' },
+                        { id: 8, data: '19/05/2025', turma: '7º ANO', aluno: 'Maycon', contato: '', responsavelLigacao: '', justificativa: '' },
+                        { id: 9, data: '19/05/2025', turma: '7º ANO', aluno: 'Suelen', contato: '', responsavelLigacao: '', justificativa: '' },
+                        { id: 10, data: '19/05/2025', turma: '7º ANO', aluno: 'Kamilly', contato: '', responsavelLigacao: '', justificativa: '' },
+                        { id: 11, data: '20/05/2025', turma: '8º ANO', aluno: 'Katlyn', contato: 'Rosane (mãe)', responsavelLigacao: 'Elaine', justificativa: 'Mãe avisou a diretora que aluna ficaria 1 semana ausente do colégio' },
+                    ];
+                    salvarDados();
+                }
+            } catch (error) {
+                console.error('Erro ao carregar dados:', error);
+                registros = [];
+            }
+        }
+
+        // Função para salvar dados no localStorage
+        function salvarDados() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(registros));
+                atualizarStatusSalvamento(true);
+                atualizarUltimaAtualizacao();
+            } catch (error) {
+                console.error('Erro ao salvar dados:', error);
+                atualizarStatusSalvamento(false);
+            }
+        }
+
+        // Atualizar indicador de status
+        function atualizarStatusSalvamento(salvo) {
+            const indicator = document.getElementById('status-indicator');
+            if (salvo) {
+                indicator.className = 'status-indicator status-saved';
+                indicator.innerHTML = '<i class="fas fa-check-circle mr-1"></i>Dados salvos';
+            } else {
+                indicator.className = 'status-indicator status-unsaved';
+                indicator.innerHTML = '<i class="fas fa-exclamation-triangle mr-1"></i>Erro ao salvar';
+            }
+        }
+
+        // Atualizar timestamp da última atualização
+        function atualizarUltimaAtualizacao() {
+            const agora = new Date();
+            const timestamp = agora.toLocaleString('pt-BR');
+            document.getElementById('ultima-atualizacao').textContent = timestamp;
+        }
 
         function formatarData(data) {
             const dia = String(data.getDate()).padStart(2, '0');
@@ -188,12 +301,20 @@
             return dia + '/' + mes + '/' + ano;
         }
 
-        document.getElementById('novo-data').value = formatarData(new Date());
-
+        // Event Listeners
         document.getElementById('btn-novo').addEventListener('click', toggleFormNovoRegistro);
         document.getElementById('fechar-form').addEventListener('click', toggleFormNovoRegistro);
         document.getElementById('btn-salvar').addEventListener('click', adicionarRegistro);
         document.getElementById('btn-exportar').addEventListener('click', exportarDados);
+        document.getElementById('btn-backup').addEventListener('click', () => {
+            document.getElementById('modal-backup').classList.remove('hidden');
+        });
+        document.getElementById('fechar-modal-backup').addEventListener('click', () => {
+            document.getElementById('modal-backup').classList.add('hidden');
+        });
+        document.getElementById('btn-exportar-backup').addEventListener('click', exportarBackup);
+        document.getElementById('btn-importar-backup').addEventListener('click', importarBackup);
+        document.getElementById('btn-limpar-dados').addEventListener('click', limparDados);
         document.getElementById('filtro-geral').addEventListener('input', aplicarFiltros);
         document.getElementById('filtro-turma').addEventListener('change', aplicarFiltros);
         document.getElementById('filtro-data').addEventListener('input', aplicarFiltros);
@@ -201,6 +322,9 @@
         function toggleFormNovoRegistro() {
             const form = document.getElementById('form-nova-ausencia');
             form.classList.toggle('hidden');
+            if (!form.classList.contains('hidden')) {
+                document.getElementById('novo-data').value = formatarData(new Date());
+            }
         }
 
         function adicionarRegistro() {
@@ -228,11 +352,14 @@
             };
 
             registros.push(novoRegistro);
+            salvarDados();
             
+            // Limpar formulário
             document.getElementById('novo-aluno').value = '';
             document.getElementById('novo-contato').value = '';
             document.getElementById('novo-responsavel').value = '';
             document.getElementById('novo-justificativa').value = '';
+            document.getElementById('novo-turma').value = '';
             
             renderizarTabela(registros);
             atualizarEstatisticas();
@@ -269,10 +396,11 @@
                     '<td class="px-4 py-2"><input type="text" class="w-full border-0 bg-transparent focus:ring-1 focus:ring-blue-300 rounded p-1" value="' + registro.contato + '" data-id="' + registro.id + '" data-field="contato"></td>' +
                     '<td class="px-4 py-2"><input type="text" class="w-full border-0 bg-transparent focus:ring-1 focus:ring-blue-300 rounded p-1" value="' + registro.responsavelLigacao + '" data-id="' + registro.id + '" data-field="responsavelLigacao"></td>' +
                     '<td class="px-4 py-2"><input type="text" class="w-full border-0 bg-transparent focus:ring-1 focus:ring-blue-300 rounded p-1" value="' + registro.justificativa + '" data-id="' + registro.id + '" data-field="justificativa"></td>' +
-                    '<td class="px-4 py-2"><button class="btn-red" onclick="excluirRegistro(' + registro.id + ')">Excluir</button></td>';
+                    '<td class="px-4 py-2"><button class="btn-red" onclick="excluirRegistro(' + registro.id + ')"><i class="fas fa-trash mr-1"></i>Excluir</button></td>';
                 tbody.appendChild(tr);
             });
 
+            // Adicionar event listeners para edição inline
             document.querySelectorAll('#tabela-registros input, #tabela-registros select').forEach(function(input) {
                 input.addEventListener('change', function() {
                     const id = parseInt(this.dataset.id);
@@ -282,6 +410,7 @@
                     const registro = registros.find(function(r) { return r.id === id; });
                     if (registro) {
                         registro[campo] = valor;
+                        salvarDados();
                         atualizarEstatisticas();
                     }
                 });
@@ -293,6 +422,7 @@
         function excluirRegistro(id) {
             if (confirm('Tem certeza que deseja excluir este registro?')) {
                 registros = registros.filter(function(registro) { return registro.id !== id; });
+                salvarDados();
                 aplicarFiltros();
                 atualizarEstatisticas();
             }
@@ -322,6 +452,7 @@
         function atualizarEstatisticas() {
             document.getElementById('total-ausencias').textContent = registros.length;
 
+            // Ausências por turma
             const porTurma = {};
             registros.forEach(function(registro) {
                 porTurma[registro.turma] = (porTurma[registro.turma] || 0) + 1;
@@ -338,6 +469,7 @@
                 divTurmas.appendChild(div);
             });
 
+            // Ausências por data
             const porData = {};
             registros.forEach(function(registro) {
                 porData[registro.data] = (porData[registro.data] || 0) + 1;
@@ -371,10 +503,83 @@
             document.body.removeChild(link);
         }
 
+        // Funções de backup
+        function exportarBackup() {
+            const backup = {
+                dados: registros,
+                timestamp: new Date().toISOString(),
+                versao: '1.0'
+            };
+            
+            const dataStr = JSON.stringify(backup, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(dataBlob);
+            link.download = 'backup_frequencia_escolar_' + formatarData(new Date()).replace(/\//g, '-') + '.json';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            document.getElementById('modal-backup').classList.add('hidden');
+        }
+
+        function importarBackup() {
+            const fileInput = document.getElementById('input-importar');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert('Por favor, selecione um arquivo de backup.');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const backup = JSON.parse(e.target.result);
+                    
+                    if (backup.dados && Array.isArray(backup.dados)) {
+                        if (confirm('Isso substituirá todos os dados atuais. Deseja continuar?')) {
+                            registros = backup.dados;
+                            salvarDados();
+                            renderizarTabela(registros);
+                            atualizarEstatisticas();
+                            document.getElementById('modal-backup').classList.add('hidden');
+                            alert('Backup importado com sucesso!');
+                        }
+                    } else {
+                        alert('Arquivo de backup inválido.');
+                    }
+                } catch (error) {
+                    alert('Erro ao ler arquivo de backup.');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function limparDados() {
+            if (confirm('ATENÇÃO: Isso removerá permanentemente todos os registros. Esta ação não pode ser desfeita. Deseja continuar?')) {
+                if (confirm('Tem certeza absoluta? Todos os dados serão perdidos!')) {
+                    registros = [];
+                    salvarDados();
+                    renderizarTabela(registros);
+                    atualizarEstatisticas();
+                    document.getElementById('modal-backup').classList.add('hidden');
+                    alert('Todos os dados foram removidos.');
+                }
+            }
+        }
+
+        // Fechar modal clicando fora dele
+        document.getElementById('modal-backup').addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.classList.add('hidden');
+            }
+        });
+
+        // Função global para excluir (necessária para onclick)
         window.excluirRegistro = excluirRegistro;
 
-        renderizarTabela(registros);
-        atualizarEstatisticas();
     </script>
 </body>
 </html>
